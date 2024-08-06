@@ -254,6 +254,13 @@ app.delete("/deleteitem/:id", async (req, res) => {
   }
 });
 
+app.delete("/sales-delete/:id",async(req,res)=>{
+  let id = req.params.id;
+  console.log(id);
+  await Sales.deleteOne({_id:id});
+  // res.json(data)
+})
+
 app.post("/sales",async (req,res)=>{
   
   try {
