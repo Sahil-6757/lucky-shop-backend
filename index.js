@@ -173,6 +173,16 @@ app.delete("/delete-order/:id", async (req, res) => {
 
 app.put("/sales-edit/:id", async (req,res)=>{
   console.log(req.params.id);
+  await Sales.findOneAndUpdate({_id:req.params.id},{
+    $set:{
+      name : req.body.name,
+      date:req.body.date,
+      rate:req.body.rate,
+      quantity: req.body.quantity,
+      total:req.body.total
+      
+    }
+  })
 })
 
 app.put("/edititem/:id", upload.single("image"), async (req, res) => {
