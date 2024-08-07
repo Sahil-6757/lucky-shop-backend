@@ -13,7 +13,7 @@ const db_URL = process.env.MONGODB_URL;
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "../src/components/Dashboard/images");
+    cb(null, "./src/components/Dashboard/images");
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now();
