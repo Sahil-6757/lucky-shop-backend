@@ -171,6 +171,10 @@ app.delete("/delete-order/:id", async (req, res) => {
   }
 });
 
+app.put("/sales-edit/:id", async (req,res)=>{
+  console.log(req.params.id);
+})
+
 app.put("/edititem/:id", upload.single("image"), async (req, res) => {
   try {
     console.log(req.params.id);
