@@ -182,7 +182,9 @@ app.put("/sales-edit/:id", async (req,res)=>{
       total:req.body.total
       
     }
+  
   })
+  res.json({message:"Updated"})
 })
 
 app.put("/edititem/:id", upload.single("image"), async (req, res) => {
