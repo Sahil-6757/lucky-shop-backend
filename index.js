@@ -164,28 +164,28 @@ app.delete("/delete-order/:id", async (req, res) => {
   try {
     let id = await req.params.id;
     let data = await Order.findById({ _id: id });
-
     await Order.deleteOne({ _id: id });
   } catch (error) {
     console.log(error);
   }
 });
 
-app.put("/sales-edit/:id", async (req,res)=>{
+app.put("/sales-edit/:id", async (req, res) => {
   console.log(req.params.id);
-  await Sales.findOneAndUpdate({_id:req.params.id},{
-    $set:{
-      name : req.body.name,
-      date:req.body.date,
-      rate:req.body.rate,
-      quantity: req.body.quantity,
-      total:req.body.total
-      
+  await Sales.findOneAndUpdate(
+    { _id: req.params.id },
+    {
+      $set: {
+        name: req.body.name,
+        date: req.body.date,
+        rate: req.body.rate,
+        quantity: req.body.quantity,
+        total: req.body.total,
+      },
     }
-  
-  })
-  res.json({message:"Updated"})
-})
+  );
+  res.json({ message: "Updated" });
+});
 
 app.put("/edititem/:id", upload.single("image"), async (req, res) => {
   try {
@@ -270,33 +270,31 @@ app.delete("/deleteitem/:id", async (req, res) => {
   }
 });
 
-app.delete("/sales-delete/:id",async(req,res)=>{
+app.delete("/sales-delete/:id", async (req, res) => {
   let id = req.params.id;
-  await Sales.deleteOne({_id:id});
+  await Sales.deleteOne({ _id: id });
   // res.json(data)
-})
+});
 
-app.post("/sales",async (req,res)=>{
-  
+app.post("/sales", async (req, res) => {
   try {
     let sale = new Sales();
     sale.name = req.body.name;
     sale.date = req.body.date;
     sale.rate = req.body.rate;
     sale.quantity = req.body.quantity;
-    sale.total = req.body.total
+    sale.total = req.body.total;
     await sale.save();
-    res.json({message:"Success"})
+    res.json({ message: "Success" });
   } catch (error) {
-    res.json(error)
+    res.json(error);
   }
-})
+});
 
-app.get("/sales", async (req,res)=>{
+app.get("/sales", async (req, res) => {
   let data = await Sales.find({});
-  res.json(data)
-})
-
+  res.json(data);
+});
 
 // Server point
 app.listen(PORT, () => {
