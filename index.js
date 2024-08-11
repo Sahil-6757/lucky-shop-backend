@@ -298,9 +298,8 @@ app.get("/sales", async (req, res) => {
 
 app.get("/sales/:date", async (req, res) => {
   let date = req.params.date
-  res.json({date:date})
-  let data = await Sales.find({});
-  res.json(data);
+  let result = await Sales.find({date:date})
+  res.json(result)
 });
 
 // Server point
