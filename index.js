@@ -300,7 +300,7 @@ app.post("/sales-result", async (req, res) => {
    try {
     let data = await req.body
     console.log(data)
-    let result = await Sales.find({date:data})
+    let result = await Sales.find({data})
     res.json(result)
    } catch (error) {
     res.json(error)
