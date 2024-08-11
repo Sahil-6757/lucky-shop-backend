@@ -298,8 +298,9 @@ app.get("/sales", async (req, res) => {
 
 app.post("/sales-result", async (req, res) => {
    try {
-    let date = await req.body.todayDate;
-    res.json(date)
+    let data = await req.body.date
+    let result = await Sales.find({data})
+    res.json(result)
    } catch (error) {
     res.json(error)
    } 
