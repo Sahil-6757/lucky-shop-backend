@@ -296,11 +296,13 @@ app.get("/sales", async (req, res) => {
   res.json(data);
 });
 
-app.get("/sales/:date", async (req, res) => {
-  let date = req.params.date
-  let result = await Sales.find({date:date})
-  console.log(result)
-  res.json(result)
+app.post("/sales-result", async (req, res) => {
+   try {
+    let date = await req.body.todayDate;
+    res.json(date)
+   } catch (error) {
+    res.json(error)
+   } 
 });
 
 // Server point
