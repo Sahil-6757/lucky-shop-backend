@@ -299,6 +299,7 @@ app.get("/sales", async (req, res) => {
 app.get("/sales/:date", async (req, res) => {
   let date = req.params.date
   let result = await Sales.find({date:date})
+  console.log(result)
   res.json(result)
 });
 
