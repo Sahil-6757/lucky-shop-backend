@@ -300,7 +300,7 @@ app.post("/sales-result", async (req, res) => {
    try {
     let data = await req.body
     let dataa = data.date
-    
+    console.log(dataa)
     let result = await Sales.find({date:dataa})
     res.json(result)
    } catch (error) {
