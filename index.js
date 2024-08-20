@@ -297,15 +297,15 @@ app.get("/sales", async (req, res) => {
 });
 
 app.post("/sales-result", async (req, res) => {
-   try {
+  try {
     let data = await req.body
     let dataa = data.date
     console.log(dataa)
-    let result = await Sales.find({date:dataa})
+    let result = await Sales.find({ date: dataa })
     res.json(result)
-   } catch (error) {
+  } catch (error) {
     res.json(error)
-   } 
+  }
 });
 
 // Server point
