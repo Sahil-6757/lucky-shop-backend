@@ -165,7 +165,7 @@ app.delete("/delete-order/:id", async (req, res) => {
   try {
     let id = await req.params.id;
     let data = await Order.findById({_id:id})
-    if(!data){
+    if(!data.$isEmpty()){
       await Order.deleteOne({_id:id});
       res.json({message:"Order Deleted"})
     }
