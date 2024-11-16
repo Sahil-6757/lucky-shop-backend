@@ -13,7 +13,7 @@ const db_URL = process.env.MONGODB_URL;
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "https://srv1672-files.hstgr.io/037ad4b2ece7629d/files/public_html/luckyshop/static/media");
+    cb(null, "../src/components/Dashboard/images");
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now();
@@ -164,27 +164,16 @@ app.delete("/delete-order/:id", async (req, res) => {
   try {
     let id = await req.params.id;
     let data = await Order.findById({ _id: id });
-    await Order.deleteOne({ _id: id });
+    if(!data){
+      await Order.deleteOne({_id:id});
+      res.json({message:"Order Deleted"})
+    }
+    else{
+      res.json({message:"No Data found"})
+    }
   } catch (error) {
     console.log(error);
   }
-});
-
-app.put("/sales-edit/:id", async (req, res) => {
-  console.log(req.params.id);
-  await Sales.findOneAndUpdate(
-    { _id: req.params.id },
-    {
-      $set: {
-        name: req.body.name,
-        date: req.body.date,
-        rate: req.body.rate,
-        quantity: req.body.quantity,
-        total: req.body.total,
-      },
-    }
-  );
-  res.json({ message: "Updated" });
 });
 
 app.put("/edititem/:id", upload.single("image"), async (req, res) => {
@@ -270,43 +259,27 @@ app.delete("/deleteitem/:id", async (req, res) => {
   }
 });
 
-app.delete("/sales-delete/:id", async (req, res) => {
-  let id = req.params.id;
-  await Sales.deleteOne({ _id: id });
-  // res.json(data)
-});
-
-app.post("/sales", async (req, res) => {
+app.post("/sales",async (req,res)=>{
+  
   try {
     let sale = new Sales();
     sale.name = req.body.name;
     sale.date = req.body.date;
     sale.rate = req.body.rate;
     sale.quantity = req.body.quantity;
-    sale.total = req.body.total;
+    sale.total = req.body.total
     await sale.save();
-    res.json({ message: "Success" });
-  } catch (error) {
-    res.json(error);
-  }
-});
-
-app.get("/sales", async (req, res) => {
-  let data = await Sales.find({});
-  res.json(data);
-});
-
-app.post("/sales-result", async (req, res) => {
-  try {
-    let data = await req.body
-    let dataa = data.date
-    console.log(dataa)
-    let result = await Sales.find({ date: dataa })
-    res.json(result)
+    res.json({message:"Success"})
   } catch (error) {
     res.json(error)
   }
-});
+})
+
+app.get("/sales", async (req,res)=>{
+  let data = await Sales.find({});
+  res.json(data)
+})
+
 
 // Server point
 app.listen(PORT, () => {
