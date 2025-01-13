@@ -161,16 +161,14 @@ app.delete("/delete/:id", async (req, res) => {
 });
 
 app.delete("/delete-order/:id", async (req, res) => {
- 
   try {
     let id = await req.params.id;
-    let data = await Order.findById({_id:id})
-    if(!data.$isEmpty()){
-      await Order.deleteOne({_id:id});
-      res.json({message:"Order Deleted"})
-    }
-    else{
-      res.json({message:"No Data found"})
+    let data = await Order.findById({ id });
+    if (!data) {
+      await Order.deleteOne({ _id: id });
+      res.json({ message: "Order Deleted" });
+    } else {
+      res.json({ message: "No Data found" });
     }
   } catch (error) {
     console.log(error);
@@ -204,6 +202,22 @@ app.delete("/userDelete/:id", async (req, res) => {
     console.log(data.$isEmpty());
     if (!data.$isEmpty()) {
       await User.deleteOne({ _id: id });
+      res.json({ message: "Deleted" });
+    } else {
+      res.json({ message: "No data Found" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+app.delete("/sales-delete/:id", async (req, res) => {
+  try {
+    let id = await req.params.id;
+    console.log(id);
+    let data = await Sales.findById({ _id: id });
+    console.log(Sales.$isEmpty);
+    if (!data.$isEmpty()) {
+      await Sales.deleteOne({ _id: id });
       res.json({ message: "Deleted" });
     } else {
       res.json({ message: "No data Found" });
@@ -260,27 +274,25 @@ app.delete("/deleteitem/:id", async (req, res) => {
   }
 });
 
-app.post("/sales",async (req,res)=>{
-  
+app.post("/sales", async (req, res) => {
   try {
     let sale = new Sales();
     sale.name = req.body.name;
     sale.date = req.body.date;
     sale.rate = req.body.rate;
     sale.quantity = req.body.quantity;
-    sale.total = req.body.total
+    sale.total = req.body.total;
     await sale.save();
-    res.json({message:"Success"})
+    res.json({ message: "Success" });
   } catch (error) {
-    res.json(error)
+    res.json(error);
   }
-})
+});
 
-app.get("/sales", async (req,res)=>{
+app.get("/sales", async (req, res) => {
   let data = await Sales.find({});
-  res.json(data)
-})
-
+  res.json(data);
+});
 
 // Server point
 app.listen(PORT, () => {
