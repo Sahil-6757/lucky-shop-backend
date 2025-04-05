@@ -6,10 +6,16 @@ const mongoose = require("mongoose");
 const bodyparser = require("body-parser");
 const multer = require("multer");
 const bcrypt = require("bcryptjs");
+const Razorpay = require("razorpay");
 require("dotenv").config();
 app.use(express.static("uploads"));
 
 const db_URL = process.env.MONGODB_URL;
+var instance = new Razorpay({
+  key_id: 'rzp_test_qYSE3cb88yQZnp',
+  key_secret: 'uhuN9IbZIz07qSKEfEXFBF9R',
+});
+
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -110,6 +116,28 @@ app.post("/login", async (req, res) => {
     res.json({ message: "Admin login Success" });
   } else {
     res.json({ message: "login Failed" });
+  }
+});
+
+app.post("/razorpay", async (req, res) => {
+  try {
+    const { amount, currency, receipt } = req.body;
+
+    // ✅ Convert rupees to paise
+    const options = {
+      amount: amount * 100, // Razorpay requires paise
+      currency: currency || "INR",
+      receipt: receipt || `receipt_${Date.now()}`,
+    };
+
+    const order = await instance.orders.create(options);
+
+    if (!order) return res.status(500).send("Some error occurred");
+
+    res.json({ message: "success", order });
+  } catch (error) {
+    console.error("Razorpay error:", error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
