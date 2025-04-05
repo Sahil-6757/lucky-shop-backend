@@ -160,15 +160,16 @@ app.delete("/delete/:id", async (req, res) => {
   }
 });
 
-app.delete("/delete-order/:id", async (req, res) => {
+app.delete("/deleteOrder/:id", async (req, res) => {
   try {
     let id = await req.params.id;
-    let data = await Order.findById({ id });
-    if (!data) {
+    let data = await Order.findById({ _id: id });
+    console.log(data);
+    if (!data.$isEmpty()) {
       await Order.deleteOne({ _id: id });
-      res.json({ message: "Order Deleted" });
+      res.json({ message: "Deleted" });
     } else {
-      res.json({ message: "No Data found" });
+      res.json({ message: "Not Deleted" });
     }
   } catch (error) {
     console.log(error);
