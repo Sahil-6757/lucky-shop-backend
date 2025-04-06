@@ -12,10 +12,9 @@ app.use(express.static("uploads"));
 
 const db_URL = process.env.MONGODB_URL;
 var instance = new Razorpay({
-  key_id: 'rzp_test_qYSE3cb88yQZnp',
-  key_secret: 'uhuN9IbZIz07qSKEfEXFBF9R',
+  key_id: "rzp_test_qYSE3cb88yQZnp",
+  key_secret: "uhuN9IbZIz07qSKEfEXFBF9R",
 });
-
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -68,7 +67,10 @@ const orderSchema = new mongoose.Schema({
   address: { type: String, unique: false },
   mobile: { type: Number, unique: false },
   items: [{ type: Object }],
+  order_id: { type: String, unique: false },
+  payement_id: { type: String, unique: false },
   total: { type: String, unique: false },
+  time: { type: Date, default: Date.now() },
 });
 
 const saleSchema = new mongoose.Schema({
@@ -151,19 +153,26 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/order", async (req, res) => {
-  let order = new Order();
-  res.json({ message: "success" });
-  let result = Order.find(req.body);
-  if (result > 0) {
-    res.json({ message: "Data Already Present" });
-  } else {
-    order.name = req.body.name;
-    order.email = req.body.email;
-    order.address = req.body.address;
-    order.mobile = req.body.mobile;
-    order.items = req.body.order;
-    order.total = req.body.total;
-    await order.save();
+  try {
+    let order = new Order();
+    res.json({ message: "success" });
+    let result = Order.find(req.body);
+    if (result > 0) {
+      res.json({ message: "Data Already Present" });
+    } else {
+      console.log(req.body);
+      order.name = req.body.name;
+      order.email = req.body.email;
+      order.address = req.body.address;
+      order.mobile = req.body.mobile;
+      order.items = req.body.order;
+      order.order_id = req.body.order_id;
+      order.payement_id = req.body.payement_id;
+      order.total = req.body.total;
+      await order.save();
+    }
+  } catch (error) {
+    console.log(error);
   }
 });
 
