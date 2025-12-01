@@ -6,25 +6,21 @@ const mongoose = require("mongoose");
 const bodyparser = require("body-parser");
 const multer = require("multer");
 const bcrypt = require("bcryptjs");
-const Razorpay = require("razorpay");
-const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 app.use(express.static("uploads"));
-const fs = require("fs");
 
 const db_URL = process.env.MONGODB_URL;
-var instance = new Razorpay({
-  key_id: "rzp_test_qYSE3cb88yQZnp",
-  key_secret: "uhuN9IbZIz07qSKEfEXFBF9R",
-});
 
-cloudinary.config({
-  cloud_name: "dbi2w9wjw",
-  api_key: "316433984532898",
-  api_secret: "Yjv9ZcE-fVJgnaydoBFqjpr8M04", // Click 'View API Keys' above to copy your API secret
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "../src/components/Dashboard/images");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now();
+    cb(null, uniqueSuffix + file.originalname);
+  },
 });
-
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ storage: storage });
 
 // Mongoose connection starts
 async function main() {
@@ -58,21 +54,15 @@ const itemSchema = new mongoose.Schema({
   description: { type: String, unique: false },
   rate: { type: String, unique: false },
   image: { type: String, unique: false },
-  crouselname: { type: String, unique: false },
-  crouselimage: { type: String, unique: false },
-
 });
 
 const orderSchema = new mongoose.Schema({
-  order_id: { type: String, unique: false },
   name: { type: String, unique: false },
   email: { type: String, unique: false },
   address: { type: String, unique: false },
   mobile: { type: Number, unique: false },
   items: [{ type: Object }],
-  payement_id: { type: String, unique: false },
   total: { type: String, unique: false },
-  time: { type: Date, default: Date.now() },
 });
 
 const saleSchema = new mongoose.Schema({
@@ -123,76 +113,34 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/razorpay", async (req, res) => {
-  try {
-    const { amount, currency, receipt } = req.body;
-
-    // ✅ Convert rupees to paise
-    const options = {
-      amount: amount * 100, // Razorpay requires paise
-      currency: currency || "INR",
-      receipt: receipt || `receipt_${Date.now()}`,
-    };
-
-    const order = await instance.orders.create(options);
-
-    if (!order) return res.status(500).send("Some error occurred");
-
-    res.json({ message: "success", order });
-  } catch (error) {
-    console.error("Razorpay error:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});
-
 app.post("/register", async (req, res) => {
-  let user = new User();
   const { name, email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = new User({ name, email, password: hashedPassword });
+  
+  const newUser = new User({ name, email, password });
   newUser.save();
   res.json({ message: "success" });
 });
 
 app.post("/order", async (req, res) => {
-  try {
-    let order = new Order();
-    res.json({ message: "success" });
-    let result = Order.find(req.body);
-    if (result > 0) {
-      res.json({ message: "Data Already Present" });
-    } else {
-      console.log(req.body);
-      order.order_id = req.body.order_id;
-      order.name = req.body.name;
-      order.email = req.body.email;
-      order.address = req.body.address;
-      order.mobile = req.body.mobile;
-      order.items = req.body.order;
-      order.payement_id = req.body.payement_id;
-      order.total = req.body.total;
-      await order.save();
-    }
-  } catch (error) {
-    console.log(error);
+  let order = new Order();
+  res.json({ message: "success" });
+  let result = Order.find(req.body);
+  if (result > 0) {
+    res.json({ message: "Data Already Present" });
+  } else {
+    order.name = req.body.name;
+    order.email = req.body.email;
+    order.address = req.body.address;
+    order.mobile = req.body.mobile;
+    order.items = req.body.order;
+    order.total = req.body.total;
+    await order.save();
   }
 });
 
 app.get("/order", async (req, res) => {
   let order = await Order.find({});
   res.json(order);
-});
-
-app.post("/getOrder", async (req, res) => {
-  let order = await req.body.order_id;
-  Order.find({ order_id: order })
-    .then((result) => {
-      console.log(result);
-      res.json(result);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
 });
 
 app.delete("/delete/:id", async (req, res) => {
@@ -211,16 +159,17 @@ app.delete("/delete/:id", async (req, res) => {
   }
 });
 
-app.delete("/deleteOrder/:id", async (req, res) => {
+app.delete("/delete-order/:id", async (req, res) => {
+ 
   try {
     let id = await req.params.id;
-    let data = await Order.findById({ _id: id });
-    console.log(data);
-    if (!data.$isEmpty()) {
-      await Order.deleteOne({ _id: id });
-      res.json({ message: "Deleted" });
-    } else {
-      res.json({ message: "Not Deleted" });
+    let data = await Order.findById({_id:id})
+    if(!data.$isEmpty()){
+      await Order.deleteOne({_id:id});
+      res.json({message:"Order Deleted"})
+    }
+    else{
+      res.json({message:"No Data found"})
     }
   } catch (error) {
     console.log(error);
@@ -262,22 +211,6 @@ app.delete("/userDelete/:id", async (req, res) => {
     console.log(error);
   }
 });
-app.delete("/sales-delete/:id", async (req, res) => {
-  try {
-    let id = await req.params.id;
-    console.log(id);
-    let data = await Sales.findById({ _id: id });
-    console.log(Sales.$isEmpty);
-    if (!data.$isEmpty()) {
-      await Sales.deleteOne({ _id: id });
-      res.json({ message: "Deleted" });
-    } else {
-      res.json({ message: "No data Found" });
-    }
-  } catch (error) {
-    console.log(error);
-  }
-});
 
 app.get("/user", async (req, res) => {
   let user = await User.find({});
@@ -296,18 +229,22 @@ app.get("/item", async (req, res) => {
 
 app.post("/item", upload.single("image"), async (req, res) => {
   try {
-    const result = await cloudinary.uploader.upload(req.file.path);
+    var obj = {
+      name: req.body.name,
+      description: req.body.description,
+      rate: req.body.rate,
+      image: req.file.filename,
+    };
+    // req.file is the name of your file in the form above, here 'uploaded_file'
+    // req.body will hold the text fields, if there were any
     let item = new Item();
-    item.name = req.body.name;
-    item.description = req.body.description;
-    item.rate = req.body.rate;
-    item.image = result.secure_url;
-    item.save();
-    fs.unlinkSync(req.file.path);
+    Item.create(obj);
+
+    // await item.save();
 
     res.json({ message: "success" });
   } catch (error) {
-    console.log("Error " + error);
+    res.json({ error });
   }
 });
 
@@ -322,46 +259,27 @@ app.delete("/deleteitem/:id", async (req, res) => {
   }
 });
 
-app.post("/sales", async (req, res) => {
+app.post("/sales",async (req,res)=>{
+  
   try {
     let sale = new Sales();
     sale.name = req.body.name;
     sale.date = req.body.date;
     sale.rate = req.body.rate;
     sale.quantity = req.body.quantity;
-    sale.total = req.body.total;
+    sale.total = req.body.total
     await sale.save();
-    res.json({ message: "Success" });
+    res.json({message:"Success"})
   } catch (error) {
-    res.json(error);
+    res.json(error)
   }
-});
+})
 
-app.post("/crousel", upload.single("image"), async (req, res) => {
-  try {
-    const result = await cloudinary.uploader.upload(req.file.path);
-    let item = new Item();
-    item.crouselname = req.body.name;
-    item.crouselimage = result.secure_url;
-    item.save();
-    fs.unlinkSync(req.file.path);
-
-    res.json({ message: "success" });
-  } catch (error) {
-    console.log("Error " + error);
-  }
-});
-
-app.get("/crousel", async (req, res) => {
-  let data = await Item.find({});
-  let result = data.filter((item) => item.crouselname !== undefined);
-  res.json(result);
-});
-
-app.get("/sales", async (req, res) => {
+app.get("/sales", async (req,res)=>{
   let data = await Sales.find({});
-  res.json(data);
-});
+  res.json(data)
+})
+
 
 // Server point
 app.listen(PORT, () => {
