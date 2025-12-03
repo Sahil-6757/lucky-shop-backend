@@ -104,10 +104,10 @@ app.post("/login", async (req, res) => {
   let result = await User.find(req.body);
   let admin = await Admin.find(req.body);
   if (result.length > 0) {
-    res.json({user:result})
+    res.json({result})
     res.json({ message: "login Success" });
   } else if (admin.length > 0) {
-    res.json({user:admin})
+    res.json({admin})
     res.json({ message: "Admin login Success" });
   } else {
     res.json({ message: "login Failed" });
