@@ -105,6 +105,7 @@ app.post("/login", async (req, res) => {
   let admin = await Admin.find(req.body);
   console.log(admin);
   if (result.length > 0) {
+    console.log(result);
     res.json({ message: "login Success" });
   } else if (admin.length > 0) {
     res.json({ message: "Admin login Success" });
@@ -115,7 +116,6 @@ app.post("/login", async (req, res) => {
 
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
-  
   const newUser = new User({ name, email, password });
   newUser.save();
   res.json({ message: "success" });
