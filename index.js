@@ -103,11 +103,10 @@ app.post("/contact", async (req, res) => {
 app.post("/login", async (req, res) => {
   let result = await User.find(req.body);
   let admin = await Admin.find(req.body);
+  console.log(admin);
   if (result.length > 0) {
-    res.json({result})
     res.json({ message: "login Success" });
   } else if (admin.length > 0) {
-    res.json({admin})
     res.json({ message: "Admin login Success" });
   } else {
     res.json({ message: "login Failed" });
