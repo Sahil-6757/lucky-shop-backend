@@ -112,6 +112,26 @@ app.post("/login", async (req, res) => {
   }
 });
 
+app.put("/updateProfile", async (req, res) => {
+  try {
+    console.log(req.body.email);
+    await User.findOneAndUpdate(
+      { email: req.body.email },
+      {
+        $set: {
+          name: req.body.name,
+          mobile: req.body.mobile,
+          email: req.body.email,
+          address: req.body.address,
+        },
+      }
+    );
+    const result = await User.findOne({ email: req.body.email });
+    res.json({ result });
+  } catch (error) {
+    res.json({ error });
+  }});
+
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   const newUser = new User({ name, email, password });
