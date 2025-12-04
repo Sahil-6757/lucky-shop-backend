@@ -106,6 +106,7 @@ app.post("/login", async (req, res) => {
   console.log(admin);
   if (result.length > 0) {
     res.json({ message: "login Success" });
+    console.log(result)
   } else if (admin.length > 0) {
     res.json({ message: "Admin login Success" });
   } else {
