@@ -40,6 +40,8 @@ const contactSchema = new mongoose.Schema({
 const userSchema = new mongoose.Schema({
   name: { type: String, unique: false },
   email: { type: String, unique: false },
+  phone: { type: String, unique: false },
+  address: { type: String, unique: false },
   password: { type: String, unique: false },
   time: { type: Date, default: Date.now() },
 });
@@ -104,7 +106,7 @@ app.post("/login", async (req, res) => {
   let result = await User.find(req.body);
   let admin = await Admin.find(req.body);
   if (result.length > 0) {
-    res.json({ message: "login Success",user:result });
+    res.json({ message: "login Success", user: result });
   } else if (admin.length > 0) {
     res.json({ message: "Admin login Success" });
   } else {
@@ -120,7 +122,7 @@ app.put("/updateProfile", async (req, res) => {
       {
         $set: {
           name: req.body.name,
-          mobile: req.body.mobile,
+          phone: req.body.mobile,
           email: req.body.email,
           address: req.body.address,
         },
@@ -130,7 +132,8 @@ app.put("/updateProfile", async (req, res) => {
     res.json({ result });
   } catch (error) {
     res.json({ error });
-  }});
+  }
+});
 
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
@@ -178,16 +181,14 @@ app.delete("/delete/:id", async (req, res) => {
 });
 
 app.delete("/delete-order/:id", async (req, res) => {
- 
   try {
     let id = await req.params.id;
-    let data = await Order.findById({_id:id})
-    if(!data.$isEmpty()){
-      await Order.deleteOne({_id:id});
-      res.json({message:"Order Deleted"})
-    }
-    else{
-      res.json({message:"No Data found"})
+    let data = await Order.findById({ _id: id });
+    if (!data.$isEmpty()) {
+      await Order.deleteOne({ _id: id });
+      res.json({ message: "Order Deleted" });
+    } else {
+      res.json({ message: "No Data found" });
     }
   } catch (error) {
     console.log(error);
@@ -216,7 +217,7 @@ app.put("/edititem/:id", upload.single("image"), async (req, res) => {
 
 app.delete("/userDelete/:id", async (req, res) => {
   try {
-    let id = await req.params.id;
+    let id = req.params.id;
     let data = await User.findById({ _id: id });
     console.log(data.$isEmpty());
     if (!data.$isEmpty()) {
@@ -277,27 +278,25 @@ app.delete("/deleteitem/:id", async (req, res) => {
   }
 });
 
-app.post("/sales",async (req,res)=>{
-  
+app.post("/sales", async (req, res) => {
   try {
     let sale = new Sales();
     sale.name = req.body.name;
     sale.date = req.body.date;
     sale.rate = req.body.rate;
     sale.quantity = req.body.quantity;
-    sale.total = req.body.total
+    sale.total = req.body.total;
     await sale.save();
-    res.json({message:"Success"})
+    res.json({ message: "Success" });
   } catch (error) {
-    res.json(error)
+    res.json(error);
   }
-})
+});
 
-app.get("/sales", async (req,res)=>{
+app.get("/sales", async (req, res) => {
   let data = await Sales.find({});
-  res.json(data)
-})
-
+  res.json(data);
+});
 
 // Server point
 app.listen(PORT, () => {
