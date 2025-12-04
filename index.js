@@ -114,7 +114,7 @@ app.post("/login", async (req, res) => {
 
 app.put("/updateProfile", async (req, res) => {
   try {
-    console.log(req.body.email);
+    console.log(req.body);
     await User.findOneAndUpdate(
       { email: req.body.email },
       {
