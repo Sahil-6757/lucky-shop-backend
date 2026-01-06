@@ -13,7 +13,7 @@ const db_URL = process.env.MONGODB_URL;
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "../src/components/Dashboard/images");
+    cb(null, "uploads");
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now();
@@ -103,11 +103,12 @@ app.post("/contact", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  let result = await User.find(req.body);
-  let admin = await Admin.find(req.body);
-  if (result.length > 0) {
-    res.json({ message: "login Success", user: result });
-  } else if (admin.length > 0) {
+  const { email, password } = req.body;
+  let user = await User.findOne({ email });
+  let admin = await Admin.findOne({ email });
+  if (user && await bcrypt.compare(password, user.password)) {
+    res.json({ message: "login Success", user: [user] });
+  } else if (admin && await bcrypt.compare(password, admin.password)) {
     res.json({ message: "Admin login Success" });
   } else {
     res.json({ message: "login Failed" });
@@ -137,16 +138,16 @@ app.put("/updateProfile", async (req, res) => {
 
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
-  const newUser = new User({ name, email, password });
-  newUser.save();
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = new User({ name, email, password: hashedPassword });
+  await newUser.save();
   res.json({ message: "success" });
 });
 
 app.post("/order", async (req, res) => {
   let order = new Order();
-  res.json({ message: "success" });
-  let result = Order.find(req.body);
-  if (result > 0) {
+  let result = await Order.find(req.body);
+  if (result.length > 0) {
     res.json({ message: "Data Already Present" });
   } else {
     order.name = req.body.name;
@@ -156,6 +157,7 @@ app.post("/order", async (req, res) => {
     order.items = req.body.order;
     order.total = req.body.total;
     await order.save();
+    res.json({ message: "success" });
   }
 });
 
@@ -169,7 +171,7 @@ app.delete("/delete/:id", async (req, res) => {
     let id = await req.params.id;
     let data = await Contact.findById({ _id: id });
 
-    if (!data.$isEmpty()) {
+    if (data) {
       await Contact.deleteOne({ _id: id });
       res.json({ message: "Deleted" });
     } else {
@@ -180,11 +182,11 @@ app.delete("/delete/:id", async (req, res) => {
   }
 });
 
-app.delete("/delete-order/:id", async (req, res) => {
+app.delete("/deleteOrder/:id", async (req, res) => {
   try {
     let id = await req.params.id;
     let data = await Order.findById({ _id: id });
-    if (!data.$isEmpty()) {
+    if (data) {
       await Order.deleteOne({ _id: id });
       res.json({ message: "Order Deleted" });
     } else {
@@ -220,7 +222,7 @@ app.delete("/userDelete/:id", async (req, res) => {
     let id = req.params.id;
     let data = await User.findById({ _id: id });
     console.log(data.$isEmpty());
-    if (!data.$isEmpty()) {
+    if (data) {
       await User.deleteOne({ _id: id });
       res.json({ message: "Deleted" });
     } else {
@@ -256,10 +258,7 @@ app.post("/item", upload.single("image"), async (req, res) => {
     };
     // req.file is the name of your file in the form above, here 'uploaded_file'
     // req.body will hold the text fields, if there were any
-    let item = new Item();
-    Item.create(obj);
-
-    // await item.save();
+    await Item.create(obj);
 
     res.json({ message: "success" });
   } catch (error) {
