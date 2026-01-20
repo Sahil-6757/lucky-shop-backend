@@ -155,6 +155,9 @@ app.post("/order", async (req, res) => {
     order.mobile = req.body.mobile;
     order.items = req.body.order;
     order.total = req.body.total;
+    order.time = req.body.time;
+    order.payment_id = req.body.payment_id;
+    order.order_id = req.body.order_id;
     await order.save();
   }
 });
