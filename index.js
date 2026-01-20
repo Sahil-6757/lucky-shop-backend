@@ -186,6 +186,16 @@ app.delete("/delete/:id", async (req, res) => {
   }
 });
 
+app.post("/getOrders", async (req, res) => {
+  try {
+    let email = req.body.email;
+    let data = await Order.find({ email: email });
+    res.json(data);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 app.delete("/deleteOrder/:id", async (req, res) => {
   try {
     let id = await req.params.id;
