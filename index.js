@@ -60,6 +60,9 @@ const itemSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema({
   name: { type: String, unique: false },
+  order_id: { type: String, unique: false },
+  payment_id: { type: String, unique: false },
+  time: { type: String, unique: false },
   email: { type: String, unique: false },
   address: { type: String, unique: false },
   mobile: { type: Number, unique: false },
