@@ -61,7 +61,7 @@ const itemSchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema({
   name: { type: String, unique: false },
   order_id: { type: String, unique: false },
-  payment_id: { type: String, unique: false },
+  payement_id: { type: String, unique: false },
   time: { type: String, unique: false },
   email: { type: String, unique: false },
   address: { type: String, unique: false },
@@ -159,7 +159,7 @@ app.post("/order", async (req, res) => {
     order.items = req.body.order;
     order.total = req.body.total;
     order.time = req.body.time;
-    order.payment_id = req.body.payment_id;
+    order.payement_id = req.body.payement_id;
     order.order_id = req.body.order_id;
     await order.save();
   }
