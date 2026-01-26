@@ -11,21 +11,11 @@ app.use(express.static("uploads"));
 
 const db_URL = process.env.MONGODB_URL;
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "../src/components/Dashboard/images");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now();
-    cb(null, uniqueSuffix + file.originalname);
-  },
-});
-const upload = multer({ storage: storage });
 
 // Mongoose connection starts
 async function main() {
   await mongoose.connect(
-    "mongodb+srv://arbaz151033:Arbazkhan%406757@cluster.dapmmwg.mongodb.net/Lucky_Shop?retryWrites=true&w=majority&appName=clusternp"
+    "mongodb+srv://arbaz151033:Arbazkhan%406757@cluster.dapmmwg.mongodb.net/Lucky_Shop?retryWrites=true&w=majority&appName=clusternp",
   );
 }
 main().catch((err) => console.log(err));
@@ -129,7 +119,7 @@ app.put("/updateProfile", async (req, res) => {
           email: req.body.email,
           address: req.body.address,
         },
-      }
+      },
     );
     const result = await User.findOne({ email: req.body.email });
     res.json({ result });
@@ -186,22 +176,21 @@ app.delete("/delete/:id", async (req, res) => {
   }
 });
 
-app.delete("/delete-order/:id",async(req,res)=>{
+app.delete("/delete-order/:id", async (req, res) => {
   try {
-    let id= await req.params.id;
-    let data= await Order.findById({_id:id});
+    let id = await req.params.id;
+    let data = await Order.findById({ _id: id });
 
-    if(data){
-      await Order.deleteOne({_id:id});
-      res.json({message:"Order Deleted"});
-    }
-    else{
-      res.json({message:"No Data found"});
+    if (data) {
+      await Order.deleteOne({ _id: id });
+      res.json({ message: "Order Deleted" });
+    } else {
+      res.json({ message: "No Data found" });
     }
   } catch (error) {
     console.log(error);
-}
-})
+  }
+});
 
 app.post("/getOrders", async (req, res) => {
   try {
@@ -240,7 +229,7 @@ app.put("/edititem/:id", upload.single("image"), async (req, res) => {
           rate: req.body.rate,
           image: req.file.filename,
         },
-      }
+      },
     );
     res.json({ message: "success" });
   } catch (error) {
@@ -279,18 +268,17 @@ app.get("/item", async (req, res) => {
   res.json(data);
 });
 
-app.post("/item", upload.single("image"), async (req, res) => {
+app.post("/item", async (req, res) => {
   try {
     var obj = {
       name: req.body.name,
       description: req.body.description,
       rate: req.body.rate,
-      image: req.file.filename,
+      image: req.file.image,
     };
     // req.file is the name of your file in the form above, here 'uploaded_file'
     // req.body will hold the text fields, if there were any
-    let item = new Item();
-    Item.create(obj);
+    await Item.create(obj);
 
     // await item.save();
 
