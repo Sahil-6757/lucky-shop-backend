@@ -274,7 +274,7 @@ app.post("/item", async (req, res) => {
       name: req.body.name,
       description: req.body.description,
       rate: req.body.rate,
-      image: req.file.image,
+      image: req.body.image,
     };
     // req.file is the name of your file in the form above, here 'uploaded_file'
     // req.body will hold the text fields, if there were any
