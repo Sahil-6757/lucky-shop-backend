@@ -217,7 +217,7 @@ app.delete("/deleteOrder/:id", async (req, res) => {
   }
 });
 
-app.put("/edititem/:id", upload.single("image"), async (req, res) => {
+app.put("/edititem/:id", async (req, res) => {
   try {
     console.log(req.params.id);
     await Item.findOneAndUpdate(
@@ -227,7 +227,7 @@ app.put("/edititem/:id", upload.single("image"), async (req, res) => {
           name: req.body.name,
           description: req.body.description,
           rate: req.body.rate,
-          image: req.file.filename,
+          image: req.body.image,
         },
       },
     );
