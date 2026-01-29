@@ -2,13 +2,22 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
+  "homepage": "https://github.com/Sahil-6757/lucky-shop-backend#readme",
+  "bugs": {
+    "url": "https://github.com/Sahil-6757/lucky-shop-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sahil-6757/lucky-shop-backend.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
