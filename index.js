@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const bodyparser = require("body-parser");
 const multer = require("multer");
 const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 app.use(express.static("uploads"));
 
@@ -19,6 +20,21 @@ async function main() {
   );
 }
 main().catch((err) => console.log(err));
+
+
+// Nodemailer
+const transporter = nodemailer.createTransport({
+  host: "smtp.hostinger.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: "support@blogbeast.in",
+    pass: "Sahilkhan@6757",
+  },
+  rejectUnauthorized: false,
+})
+
+
 
 const contactSchema = new mongoose.Schema({
   name: { type: String, unique: false },
@@ -152,6 +168,28 @@ app.post("/order", async (req, res) => {
     order.payement_id = req.body.payement_id;
     order.order_id = req.body.order_id;
     await order.save();
+    try {
+      transporter.sendMail({
+      from:"support@blogbeast.in",
+      to: req.body.email,
+      subject: `${req.body.name} - Order Placed - Lucky Shop`,
+      html: `<h1>Thank you for your order!</h1>` +
+        `<p>Your order has been successfully placed. We will notify you once it is shipped.</p>` +
+        `<h3>Order Details:</h3>` +
+        `order ID: <strong>${req.body.order_id}</strong><br/>` +
+        `Payment ID: <strong>${req.body.payement_id}</strong><br/>` +
+        `Order Time: <strong>${req.body.time}</strong><br/>` +
+        `<ul>` +
+        `${req.body.order.map(item => `<li>${item.name} - ${item.count} x ${item.rate}</li>`).join('')}` +
+        `</ul>
+        <hr/>
+        <p><strong>Total Amount:</strong> ${req.body.total}</p>
+        <p>We appreciate your business!</p>
+        `,
+    }) } catch (error) {
+      res.json({ message: "Error Occurred" });
+    }
+ 
   }
 });
 
@@ -270,18 +308,12 @@ app.get("/item", async (req, res) => {
 
 app.post("/item", async (req, res) => {
   try {
-    var obj = {
-      name: req.body.name,
-      description: req.body.description,
-      rate: req.body.rate,
-      image: req.body.image,
-    };
-    // req.file is the name of your file in the form above, here 'uploaded_file'
-    // req.body will hold the text fields, if there were any
-    await Item.create(obj);
-
-    // await item.save();
-
+    let item = new Item();
+    item.name = req.body.name;
+    item.description = req.body.description;
+    item.rate = req.body.rate;
+    item.image = req.body.image;
+    await item.save();
     res.json({ message: "success" });
   } catch (error) {
     res.json({ error });
