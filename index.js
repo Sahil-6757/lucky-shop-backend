@@ -1,3 +1,158 @@
+const express = require("express");
+const cors = require("cors");
+const app = express();
+const PORT = process.env.PORT || 8000;
+const mongoose = require("mongoose");
+const bodyparser = require("body-parser");
+const multer = require("multer");
+const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
+app.use(express.static("uploads"));
+
+const db_URL = process.env.MONGODB_URL;
+
+// Mongoose connection starts
+async function main() {
+  await mongoose.connect(
+    "mongodb+srv://arbaz151033:Arbazkhan%406757@cluster.dapmmwg.mongodb.net/Lucky_Shop?retryWrites=true&w=majority&appName=clusternp",
+  );
+}
+main().catch((err) => console.log(err));
+
+// Nodemailer
+const transporter = nodemailer.createTransport({
+  host: "smtp.hostinger.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: "support@blogbeast.in",
+    pass: "Sahilkhan@6757",
+  },
+  rejectUnauthorized: false,
+});
+
+const contactSchema = new mongoose.Schema({
+  name: { type: String, unique: false },
+  email: { type: String, unique: false },
+  message: { type: String, unique: false },
+  time: { type: Date, default: Date.now() },
+});
+
+const userSchema = new mongoose.Schema({
+  name: { type: String, unique: false },
+  email: { type: String, unique: false },
+  phone: { type: String, unique: false },
+  address: { type: String, unique: false },
+  password: { type: String, unique: false },
+  time: { type: Date, default: Date.now() },
+});
+
+const adminSchema = new mongoose.Schema({
+  email: { type: String, unique: false },
+  password: { type: String, unique: false },
+});
+
+const itemSchema = new mongoose.Schema({
+  name: { type: String, unique: false },
+  description: { type: String, unique: false },
+  rate: { type: String, unique: false },
+  image: { type: String, unique: false },
+});
+
+const orderSchema = new mongoose.Schema({
+  name: { type: String, unique: false },
+  order_id: { type: String, unique: false },
+  payement_id: { type: String, unique: false },
+  time: { type: String, unique: false },
+  email: { type: String, unique: false },
+  address: { type: String, unique: false },
+  mobile: { type: Number, unique: false },
+  items: [{ type: Object }],
+  total: { type: String, unique: false },
+});
+
+const saleSchema = new mongoose.Schema({
+  name: { type: String, unique: false },
+  date: { type: String, unique: false },
+  rate: { type: String, unique: false },
+  quantity: { type: Number, unique: false },
+  total: { type: String, unique: false },
+});
+
+let Contact = mongoose.model("contacts", contactSchema);
+let User = mongoose.model("users", userSchema);
+let Admin = mongoose.model("admins", adminSchema);
+let Item = mongoose.model("items", itemSchema);
+let Order = mongoose.model("order", orderSchema);
+let Sales = mongoose.model("sales", saleSchema);
+// Mongoose connection ends
+
+// Middleware starts
+app.use(express.json());
+app.use(bodyparser.json());
+// Middleware ends
+
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  }),
+);
+
+app.use("/api", (req, res) => {
+  res.json({ message: "Hello World" });
+});
+
+app.post("/contact", async (req, res) => {
+  let contact = new Contact();
+  contact.name = req.body.name;
+  contact.email = req.body.email;
+  contact.message = req.body.message;
+  await contact.save();
+  res.json({ message: "Success" });
+});
+
+app.post("/login", async (req, res) => {
+  let result = await User.find(req.body);
+  let admin = await Admin.find(req.body);
+  if (result.length > 0) {
+    res.json({ message: "login Success", user: result });
+  } else if (admin.length > 0) {
+    res.json({ message: "Admin login Success" });
+  } else {
+    res.json({ message: "login Failed" });
+  }
+});
+
+app.put("/updateProfile", async (req, res) => {
+  try {
+    console.log(req.body);
+    await User.findOneAndUpdate(
+      { email: req.body.email },
+      {
+        $set: {
+          name: req.body.name,
+          phone: req.body.mobile,
+          email: req.body.email,
+          address: req.body.address,
+        },
+      },
+    );
+    const result = await User.findOne({ email: req.body.email });
+    res.json({ result });
+  } catch (error) {
+    res.json({ error });
+  }
+});
+
+app.post("/register", async (req, res) => {
+  const { name, email, password } = req.body;
+  const newUser = new User({ name, email, password });
+  newUser.save();
+  res.json({ message: "success" });
+});
+
 app.post("/order", async (req, res) => {
   try {
     let order = new Order();
@@ -15,25 +170,183 @@ app.post("/order", async (req, res) => {
     await order.save();
 
     // Send mail
-    await transporter.sendMail({
-      from: "support@blogbeast.in",
-      to: req.body.email,
-      subject: `${req.body.name} - Order Placed - Lucky Shop`,
-      html: `
-        <h1>Thank you for your order!</h1>
-        <p>Your order has been successfully placed.</p>
-        <ul>
-          ${req.body.order.map(item =>
-            `<li>${item.name} - ${item.count} x ${item.rate}</li>`
-          ).join("")}
-        </ul>
-        <p><strong>Total:</strong> ${req.body.total}</p>
-      `,
-    });
+    try {
+      await transporter.sendMail({
+        from: "support@blogbeast.in",
+        to: req.body.email,
+        subject: `${req.body.name} - Order Placed - Lucky Shop`,
+        html: `<h1>Order Confirmed</h1>`,
+      });
+    } catch (error) {
+      console.log("Mail Error:", error.message);
+    }
 
     res.json({ message: "success" }); // ✅ ONLY ONCE
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server Error" });
   }
+});
+
+app.get("/order", async (req, res) => {
+  let order = await Order.find({});
+  res.json(order);
+});
+
+app.delete("/delete/:id", async (req, res) => {
+  try {
+    let id = await req.params.id;
+    let data = await Contact.findById({ _id: id });
+
+    if (data) {
+      await Contact.deleteOne({ _id: id });
+      res.json({ message: "Deleted" });
+    } else {
+      res.json({ message: "No data Found" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.delete("/delete-order/:id", async (req, res) => {
+  try {
+    let id = await req.params.id;
+    let data = await Order.findById({ _id: id });
+
+    if (data) {
+      await Order.deleteOne({ _id: id });
+      res.json({ message: "Order Deleted" });
+    } else {
+      res.json({ message: "No Data found" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.post("/getOrders", async (req, res) => {
+  try {
+    let email = req.body.email;
+    let data = await Order.find({ email: email });
+    res.json(data);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.delete("/deleteOrder/:id", async (req, res) => {
+  try {
+    let id = await req.params.id;
+    let data = await Order.findById({ _id: id });
+    if (data) {
+      await Order.deleteOne({ _id: id });
+      res.json({ message: "Order Deleted" });
+    } else {
+      res.json({ message: "No Data found" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.put("/edititem/:id", async (req, res) => {
+  try {
+    console.log(req.params.id);
+    await Item.findOneAndUpdate(
+      { _id: req.params.id },
+      {
+        $set: {
+          name: req.body.name,
+          description: req.body.description,
+          rate: req.body.rate,
+          image: req.body.image,
+        },
+      },
+    );
+    res.json({ message: "success" });
+  } catch (error) {
+    res.json({ error });
+  }
+});
+
+app.delete("/userDelete/:id", async (req, res) => {
+  try {
+    let id = req.params.id;
+    let data = await User.findById({ _id: id });
+    console.log(data.$isEmpty());
+    if (!data.$isEmpty()) {
+      await User.deleteOne({ _id: id });
+      res.json({ message: "Deleted" });
+    } else {
+      res.json({ message: "No data Found" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.get("/user", async (req, res) => {
+  let user = await User.find({});
+  res.json(user);
+});
+
+app.get("/", async (req, res) => {
+  let docs = await Contact.find({});
+  res.json(docs);
+});
+
+app.get("/item", async (req, res) => {
+  let data = await Item.find({});
+  res.json(data);
+});
+
+app.post("/item", async (req, res) => {
+  try {
+    let item = new Item();
+    item.name = req.body.name;
+    item.description = req.body.description;
+    item.rate = req.body.rate;
+    item.image = req.body.image;
+    await item.save();
+    res.json({ message: "success" });
+  } catch (error) {
+    res.json({ error });
+  }
+});
+
+app.delete("/deleteitem/:id", async (req, res) => {
+  try {
+    let id = req.params.id;
+    let data = await Item.findById({ _id: id });
+    await Item.deleteOne({ _id: id });
+    res.json(data);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.post("/sales", async (req, res) => {
+  try {
+    let sale = new Sales();
+    sale.name = req.body.name;
+    sale.date = req.body.date;
+    sale.rate = req.body.rate;
+    sale.quantity = req.body.quantity;
+    sale.total = req.body.total;
+    await sale.save();
+    res.json({ message: "Success" });
+  } catch (error) {
+    res.json(error);
+  }
+});
+
+app.get("/sales", async (req, res) => {
+  let data = await Sales.find({});
+  res.json(data);
+});
+
+// Server point
+app.listen(PORT, () => {
+  console.log(` http://localhost:${PORT}`);
 });
