@@ -68,6 +68,7 @@ const orderSchema = new mongoose.Schema({
   email: { type: String, unique: false },
   address: { type: String, unique: false },
   mobile: { type: Number, unique: false },
+  status: { type: String, default: "Pending" },
   items: [{ type: Object }],
   total: { type: String, unique: false },
 });
@@ -153,6 +154,17 @@ app.post("/register", async (req, res) => {
   res.json({ message: "success" });
 });
 
+app.put("/updateOrderStatus/:id", async (req, res) => {
+  try {
+    await Order.findByIdAndUpdate(req.params.id, {
+      status: req.body.status,
+    });
+    res.json({ message: "Status Updated" });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
 app.post("/order", async (req, res) => {
   try {
     let order = new Order();
@@ -164,6 +176,7 @@ app.post("/order", async (req, res) => {
     order.items = req.body.order;
     order.total = req.body.total;
     order.time = req.body.time;
+    order.status = req.body.status;
     order.payement_id = req.body.payement_id;
     order.order_id = req.body.order_id;
 
