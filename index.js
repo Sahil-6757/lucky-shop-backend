@@ -192,6 +192,16 @@ app.get("/order", async (req, res) => {
   let order = await Order.find({});
   res.json(order);
 });
+app.post("/getorder", async (req, res) => {
+  try {
+    let email = req.body.email;
+    let order = await Order.find({ email: email });
+    res.json(order);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error" });
+  } 
+});
 
 app.delete("/delete/:id", async (req, res) => {
   try {
