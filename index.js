@@ -94,9 +94,13 @@ let Sales = mongoose.model("sales", saleSchema);
 
 // Middleware starts
 app.use(express.json());
-app.use(cors());
 app.use(bodyparser.json());
 // Middleware ends
+
+app.use(cors({
+  origin: "*",
+  credentials: true,
+}));
 
 app.use("/api", (req, res) => {
   res.json({ message: "Hello World" });
