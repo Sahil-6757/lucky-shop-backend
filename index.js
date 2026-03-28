@@ -195,8 +195,9 @@ app.get("/order", async (req, res) => {
 app.post("/getorder", async (req, res) => {
   try {
     let email = req.body.email;
-    let order = await Order.find({ email: email });
+    let order = await Order.find( email ? { email: email } : {} );
     res.json(order);
+    console.log(order)
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server Error" });
