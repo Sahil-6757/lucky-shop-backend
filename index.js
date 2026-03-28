@@ -170,16 +170,16 @@ app.post("/order", async (req, res) => {
     await order.save();
 
     // Send mail
-    try {
-      await transporter.sendMail({
-        from: "support@blogbeast.in",
-        to: req.body.email,
-        subject: `${req.body.name} - Order Placed - Lucky Shop`,
-        html: `<h1>Order Confirmed</h1>`,
-      });
-    } catch (error) {
-      console.log("Mail Error:", error.message);
-    }
+    // try {
+    //   await transporter.sendMail({
+    //     from: "support@blogbeast.in",
+    //     to: req.body.email,
+    //     subject: `${req.body.name} - Order Placed - Lucky Shop`,
+    //     html: `<h1>Order Confirmed</h1>`,
+    //   });
+    // } catch (error) {
+    //   console.log("Mail Error:", error.message);
+    // }
 
     res.json({ message: "success" }); // ✅ ONLY ONCE
   } catch (error) {
