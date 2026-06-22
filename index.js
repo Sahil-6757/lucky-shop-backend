@@ -10,17 +10,15 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 app.use(express.static("uploads"));
 
-const db_URL = process.env.MONGODB_URL;
-
 
 // Mongoose connection starts
 async function main() {
   await mongoose.connect(
-    "mongodb+srv://arbaz151033:Arbazkhan%406757@cluster.dapmmwg.mongodb.net/Lucky_Shop?retryWrites=true&w=majority&appName=clusternp",
+    "mongodb+srv://arbaz151033:Arbazkhan%406757@cluster.dapmmwg.mongodb.net/Lucky_Shop?retryWrites=true&w=majority&appName=clusternp"
   );
+  console.log("MongoDB Connected");
 }
 main().catch((err) => console.log(err));
-
 
 // Nodemailer
 const transporter = nodemailer.createTransport({
@@ -32,9 +30,7 @@ const transporter = nodemailer.createTransport({
     pass: "Sahilkhan@6757",
   },
   rejectUnauthorized: false,
-})
-
-
+});
 
 const contactSchema = new mongoose.Schema({
   name: { type: String, unique: false },
@@ -72,6 +68,7 @@ const orderSchema = new mongoose.Schema({
   email: { type: String, unique: false },
   address: { type: String, unique: false },
   mobile: { type: Number, unique: false },
+  status: { type: String, default: "Pending" },
   items: [{ type: Object }],
   total: { type: String, unique: false },
 });
@@ -82,6 +79,16 @@ const saleSchema = new mongoose.Schema({
   rate: { type: String, unique: false },
   quantity: { type: Number, unique: false },
   total: { type: String, unique: false },
+  paid: { type: Number, default: 0 },
+  pending: { type: Number, default: 0 },
+});
+
+const transactionSchema = new mongoose.Schema({
+  name: { type: String, unique: false },
+  date: { type: String, unique: false },
+  type: { type: String, unique: false },
+  description: { type: String, unique: false },
+  amount: { type: String, unique: false },
 });
 
 let Contact = mongoose.model("contacts", contactSchema);
@@ -90,13 +97,20 @@ let Admin = mongoose.model("admins", adminSchema);
 let Item = mongoose.model("items", itemSchema);
 let Order = mongoose.model("order", orderSchema);
 let Sales = mongoose.model("sales", saleSchema);
+let Transaction = mongoose.model("transaction", transactionSchema);
 // Mongoose connection ends
 
 // Middleware starts
 app.use(express.json());
-app.use(cors());
 app.use(bodyparser.json());
 // Middleware ends
+
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  }),
+);
 
 app.use("/api", (req, res) => {
   res.json({ message: "Hello World" });
@@ -121,6 +135,22 @@ app.post("/login", async (req, res) => {
   } else {
     res.json({ message: "login Failed" });
   }
+});
+
+app.post("/addTransaction", async (req, res) => {
+  let transaction = new Transaction();
+  transaction.name = req.body.name;
+  transaction.date = req.body.date;
+  transaction.type = req.body.type;
+  transaction.description = req.body.description;
+  transaction.amount = req.body.amount;
+  await transaction.save();
+  res.json({ message: "success" });
+});
+
+app.get("/getTransaction", async (req, res) => {
+  let transaction = await Transaction.find({});
+  res.json(transaction);
 });
 
 app.put("/updateProfile", async (req, res) => {
@@ -151,13 +181,21 @@ app.post("/register", async (req, res) => {
   res.json({ message: "success" });
 });
 
+app.put("/updateOrderStatus/:id", async (req, res) => {
+  try {
+    await Order.findByIdAndUpdate(req.params.id, {
+      status: req.body.status,
+    });
+    res.json({ message: "Status Updated" });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
 app.post("/order", async (req, res) => {
-  let order = new Order();
-  res.json({ message: "success" });
-  let result = Order.find(req.body);
-  if (result > 0) {
-    res.json({ message: "Data Already Present" });
-  } else {
+  try {
+    let order = new Order();
+
     order.name = req.body.name;
     order.email = req.body.email;
     order.address = req.body.address;
@@ -165,37 +203,45 @@ app.post("/order", async (req, res) => {
     order.items = req.body.order;
     order.total = req.body.total;
     order.time = req.body.time;
+    order.status = req.body.status;
     order.payement_id = req.body.payement_id;
     order.order_id = req.body.order_id;
+
     await order.save();
-    try {
-      transporter.sendMail({
-      from:"support@blogbeast.in",
-      to: req.body.email,
-      subject: `${req.body.name} - Order Placed - Lucky Shop`,
-      html: `<h1>Thank you for your order!</h1>` +
-        `<p>Your order has been successfully placed. We will notify you once it is shipped.</p>` +
-        `<h3>Order Details:</h3>` +
-        `order ID: <strong>${req.body.order_id}</strong><br/>` +
-        `Payment ID: <strong>${req.body.payement_id}</strong><br/>` +
-        `Order Time: <strong>${req.body.time}</strong><br/>` +
-        `<ul>` +
-        `${req.body.order.map(item => `<li>${item.name} - ${item.count} x ${item.rate}</li>`).join('')}` +
-        `</ul>
-        <hr/>
-        <p><strong>Total Amount:</strong> ${req.body.total}</p>
-        <p>We appreciate your business!</p>
-        `,
-    }) } catch (error) {
-      res.json({ message: "Error Occurred" });
-    }
- 
+
+    // Send mail
+    // try {
+    //   await transporter.sendMail({
+    //     from: "support@blogbeast.in",
+    //     to: req.body.email,
+    //     subject: `${req.body.name} - Order Placed - Lucky Shop`,
+    //     html: `<h1>Order Confirmed</h1>`,
+    //   });
+    // } catch (error) {
+    //   console.log("Mail Error:", error.message);
+    // }
+
+    res.json({ message: "success" }); // ✅ ONLY ONCE
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
 app.get("/order", async (req, res) => {
   let order = await Order.find({});
   res.json(order);
+});
+app.post("/getorder", async (req, res) => {
+  try {
+    let email = req.body.email;
+    let order = await Order.find(email ? { email: email } : {});
+    res.json(order);
+    console.log(order)
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error" });
+  }
 });
 
 app.delete("/delete/:id", async (req, res) => {
@@ -308,15 +354,29 @@ app.get("/item", async (req, res) => {
 
 app.post("/item", async (req, res) => {
   try {
-    let item = new Item();
-    item.name = req.body.name;
-    item.description = req.body.description;
-    item.rate = req.body.rate;
-    item.image = req.body.image;
-    await item.save();
-    res.json({ message: "success" });
+    console.log("Received:", req.body);
+
+    let item = new Item({
+      name: req.body.name,
+      description: req.body.description,
+      rate: req.body.rate,
+      image: req.body.image,
+    });
+
+    const savedItem = await item.save();
+
+    console.log("Saved:", savedItem);
+
+    res.json({
+      success: true,
+      item: savedItem,
+    });
   } catch (error) {
-    res.json({ error });
+    console.error("Save Error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
 });
 
@@ -339,10 +399,53 @@ app.post("/sales", async (req, res) => {
     sale.rate = req.body.rate;
     sale.quantity = req.body.quantity;
     sale.total = req.body.total;
+    sale.paid = req.body.paid !== undefined ? Number(req.body.paid) : 0;
+    sale.pending = req.body.pending !== undefined ? Number(req.body.pending) : 0;
     await sale.save();
     res.json({ message: "Success" });
   } catch (error) {
     res.json(error);
+  }
+});
+
+app.post("/sales-result", async (req, res) => {
+  try {
+    let data = await Sales.find({ date: req.body.date });
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put("/sales-edit/:id", async (req, res) => {
+  try {
+    const updatedSale = await Sales.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          name: req.body.name,
+          date: req.body.date,
+          rate: req.body.rate,
+          quantity: req.body.quantity,
+          total: req.body.total,
+          paid: req.body.paid !== undefined ? Number(req.body.paid) : 0,
+          pending: req.body.pending !== undefined ? Number(req.body.pending) : 0,
+        },
+      },
+      { new: true }
+    );
+    res.json(updatedSale);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/sales-delete/:id", async (req, res) => {
+  try {
+    await Sales.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
