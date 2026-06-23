@@ -10,6 +10,8 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 app.use(express.static("uploads"));
 
+const db_URL = process.env.MONGODB_URL;
+
 
 // Mongoose connection starts
 async function main() {
@@ -231,17 +233,6 @@ app.post("/order", async (req, res) => {
 app.get("/order", async (req, res) => {
   let order = await Order.find({});
   res.json(order);
-});
-app.post("/getorder", async (req, res) => {
-  try {
-    let email = req.body.email;
-    let order = await Order.find(email ? { email: email } : {});
-    res.json(order);
-    console.log(order)
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Server Error" });
-  }
 });
 
 app.delete("/delete/:id", async (req, res) => {
