@@ -478,7 +478,7 @@ app.post("/vehical", async (req, res) => {
     vehical.totalAmount = req.body.totalAmount !== undefined ? Number(req.body.totalAmount) : 0;
     vehical.paidAmount = req.body.paidAmount !== undefined ? Number(req.body.paidAmount) : 0;
     vehical.pendingAmount = req.body.pendingAmount !== undefined ? Number(req.body.pendingAmount) : 0;
-    
+
     // Add initial payment if exists
     if (vehical.paidAmount > 0) {
       vehical.payments = [{
