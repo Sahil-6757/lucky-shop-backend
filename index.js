@@ -100,6 +100,21 @@ let Item = mongoose.model("items", itemSchema);
 let Order = mongoose.model("order", orderSchema);
 let Sales = mongoose.model("sales", saleSchema);
 let Transaction = mongoose.model("transaction", transactionSchema);
+
+const vehicalSchema = new mongoose.Schema({
+  name: { type: String, unique: false },
+  date: { type: String, unique: false },
+  totalAmount: { type: Number, default: 0 },
+  paidAmount: { type: Number, default: 0 },
+  pendingAmount: { type: Number, default: 0 },
+  payments: [
+    {
+      amount: { type: Number },
+      date: { type: String },
+    }
+  ]
+});
+let Vehical = mongoose.model("vehical", vehicalSchema);
 // Mongoose connection ends
 
 // Middleware starts
@@ -443,6 +458,73 @@ app.delete("/sales-delete/:id", async (req, res) => {
 app.get("/sales", async (req, res) => {
   let data = await Sales.find({});
   res.json(data);
+});
+
+// Vehical Bill Routes
+app.get("/vehical", async (req, res) => {
+  try {
+    let data = await Vehical.find({});
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/vehical", async (req, res) => {
+  try {
+    let vehical = new Vehical();
+    vehical.name = req.body.name;
+    vehical.date = req.body.date;
+    vehical.totalAmount = req.body.totalAmount !== undefined ? Number(req.body.totalAmount) : 0;
+    vehical.paidAmount = req.body.paidAmount !== undefined ? Number(req.body.paidAmount) : 0;
+    vehical.pendingAmount = req.body.pendingAmount !== undefined ? Number(req.body.pendingAmount) : 0;
+    
+    // Add initial payment if exists
+    if (vehical.paidAmount > 0) {
+      vehical.payments = [{
+        amount: vehical.paidAmount,
+        date: req.body.date || new Date().toISOString().split('T')[0]
+      }];
+    } else {
+      vehical.payments = [];
+    }
+
+    await vehical.save();
+    res.json({ message: "Success", vehical });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put("/vehical/:id", async (req, res) => {
+  try {
+    const updated = await Vehical.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          name: req.body.name,
+          date: req.body.date,
+          totalAmount: req.body.totalAmount !== undefined ? Number(req.body.totalAmount) : 0,
+          paidAmount: req.body.paidAmount !== undefined ? Number(req.body.paidAmount) : 0,
+          pendingAmount: req.body.pendingAmount !== undefined ? Number(req.body.pendingAmount) : 0,
+          payments: req.body.payments || [],
+        },
+      },
+      { new: true }
+    );
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/vehical/:id", async (req, res) => {
+  try {
+    await Vehical.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Server point
