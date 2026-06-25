@@ -128,15 +128,18 @@ const allowedOrigins = [
   "https://luckyshop.blogbeast.in",
 ];
 
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow Postman or server-to-server requests
-      if (!origin) return callback(null, true);
+      console.log("Origin:", origin);
+
+      // Allow requests without an Origin (Postman, curl, server-to-server)
+      if (!origin) {
+        return callback(null, true);
+      }
 
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
+        return callback(null, true);
       }
 
       return callback(new Error("CORS policy: Origin not allowed"));
