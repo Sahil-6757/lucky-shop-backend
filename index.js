@@ -93,14 +93,6 @@ const transactionSchema = new mongoose.Schema({
   amount: { type: String, unique: false },
 });
 
-let Contact = mongoose.model("contacts", contactSchema);
-let User = mongoose.model("users", userSchema);
-let Admin = mongoose.model("admins", adminSchema);
-let Item = mongoose.model("items", itemSchema);
-let Order = mongoose.model("order", orderSchema);
-let Sales = mongoose.model("sales", saleSchema);
-let Transaction = mongoose.model("transaction", transactionSchema);
-
 const vehicalSchema = new mongoose.Schema({
   name: { type: String, unique: false },
   date: { type: String, unique: false },
@@ -114,6 +106,14 @@ const vehicalSchema = new mongoose.Schema({
     }
   ]
 });
+
+let Contact = mongoose.model("contacts", contactSchema);
+let User = mongoose.model("users", userSchema);
+let Admin = mongoose.model("admins", adminSchema);
+let Item = mongoose.model("items", itemSchema);
+let Order = mongoose.model("order", orderSchema);
+let Sales = mongoose.model("sales", saleSchema);
+let Transaction = mongoose.model("transaction", transactionSchema);
 let Vehical = mongoose.model("vehical", vehicalSchema);
 // Mongoose connection ends
 
@@ -122,11 +122,27 @@ app.use(express.json());
 app.use(bodyparser.json());
 // Middleware ends
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://luckyshop.blogbeast.in",
+];
+
+
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      // Allow Postman or server-to-server requests
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      }
+
+      return callback(new Error("CORS policy: Origin not allowed"));
+    },
     credentials: true,
-  }),
+  })
 );
 
 app.use("/api", (req, res) => {
