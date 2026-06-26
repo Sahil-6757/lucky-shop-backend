@@ -83,6 +83,14 @@ const saleSchema = new mongoose.Schema({
   total: { type: String, unique: false },
   paid: { type: Number, default: 0 },
   pending: { type: Number, default: 0 },
+  payments: [
+    {
+      amount: { type: Number },
+      date: { type: String },
+      receivedBy: { type: String },
+      mode: { type: String }
+    }
+  ]
 });
 
 const transactionSchema = new mongoose.Schema({
@@ -426,6 +434,21 @@ app.post("/sales", async (req, res) => {
     sale.total = req.body.total;
     sale.paid = req.body.paid !== undefined ? Number(req.body.paid) : 0;
     sale.pending = req.body.pending !== undefined ? Number(req.body.pending) : 0;
+
+    // Create an initial payment in the history if paid amount > 0
+    if (sale.paid > 0) {
+      sale.payments = [
+        {
+          amount: sale.paid,
+          date: req.body.date || new Date().toISOString().split("T")[0],
+          receivedBy: req.body.receivedBy || "Admin",
+          mode: req.body.mode || "Cash"
+        }
+      ];
+    } else {
+      sale.payments = [];
+    }
+
     await sale.save();
     res.json({ message: "Success" });
   } catch (error) {
@@ -455,6 +478,7 @@ app.put("/sales-edit/:id", async (req, res) => {
           total: req.body.total,
           paid: req.body.paid !== undefined ? Number(req.body.paid) : 0,
           pending: req.body.pending !== undefined ? Number(req.body.pending) : 0,
+          payments: req.body.payments || [],
         },
       },
       { new: true }
@@ -475,6 +499,26 @@ app.delete("/sales-delete/:id", async (req, res) => {
 });
 
 app.get("/sales", async (req, res) => {
+  try {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const year = sixMonthsAgo.getFullYear();
+    const month = String(sixMonthsAgo.getMonth() + 1).padStart(2, '0');
+    const day = String(sixMonthsAgo.getDate()).padStart(2, '0');
+    const sixMonthsAgoStr = `${year}-${month}-${day}`;
+
+    // Auto-delete sales history older than 6 months (YYYY-MM-DD comparison)
+    const result = await Sales.deleteMany({
+      date: { $lt: sixMonthsAgoStr }
+    });
+    if (result.deletedCount > 0) {
+      console.log(`Auto-deleted ${result.deletedCount} old sales records older than 6 months (${sixMonthsAgoStr}).`);
+    }
+  } catch (error) {
+    console.error("Failed to auto-delete old sales history:", error);
+  }
+
   let data = await Sales.find({});
   res.json(data);
 });
