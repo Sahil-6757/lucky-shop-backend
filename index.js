@@ -115,6 +115,14 @@ const vehicalSchema = new mongoose.Schema({
   ]
 });
 
+const expenseSchema = new mongoose.Schema({
+  name: { type: String, unique: false },
+  date: { type: String, unique: false },
+  category: { type: String, unique: false },
+  amount: { type: Number, unique: false },
+  description: { type: String, unique: false },
+});
+
 let Contact = mongoose.model("contacts", contactSchema);
 let User = mongoose.model("users", userSchema);
 let Admin = mongoose.model("admins", adminSchema);
@@ -123,6 +131,7 @@ let Order = mongoose.model("order", orderSchema);
 let Sales = mongoose.model("sales", saleSchema);
 let Transaction = mongoose.model("transaction", transactionSchema);
 let Vehical = mongoose.model("vehical", vehicalSchema);
+let Expense = mongoose.model("expense", expenseSchema);
 // Mongoose connection ends
 
 // Middleware starts
@@ -196,6 +205,7 @@ app.get("/getTransaction", async (req, res) => {
   let transaction = await Transaction.find({});
   res.json(transaction);
 });
+
 
 app.put("/updateProfile", async (req, res) => {
   try {
@@ -584,6 +594,61 @@ app.put("/vehical/:id", async (req, res) => {
 app.delete("/vehical/:id", async (req, res) => {
   try {
     await Vehical.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Expense Routes
+app.post("/expense", async (req, res) => {
+  try {
+    let expense = new Expense();
+    expense.name = req.body.name;
+    expense.date = req.body.date;
+    expense.category = req.body.category;
+    expense.amount = Number(req.body.amount);
+    expense.description = req.body.description;
+    await expense.save();
+    res.json({ message: "Success", expense });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/expense", async (req, res) => {
+  try {
+    let data = await Expense.find({});
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put("/expense/:id", async (req, res) => {
+  try {
+    const updated = await Expense.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          name: req.body.name,
+          date: req.body.date,
+          category: req.body.category,
+          amount: Number(req.body.amount),
+          description: req.body.description,
+        },
+      },
+      { new: true }
+    );
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/expense/:id", async (req, res) => {
+  try {
+    await Expense.findByIdAndDelete(req.params.id);
     res.json({ message: "Deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
